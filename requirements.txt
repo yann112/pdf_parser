@@ -2,5 +2,7 @@ pytesseract
 pandas==1.5.2
 PyMuPDF
 opencv-python
-python3-imaging
+# python3-imaging
 dash
+scikit-image
+Pillow
