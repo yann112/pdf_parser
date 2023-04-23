@@ -1,12 +1,15 @@
 import plotly.express as px
-from dash import Dash, dcc, html, Input, Output, State, no_update
+from dash import Dash, dcc, html, Input, Output, State, no_update, dash_table, ctx
 from skimage import data
+import pandas as pd
 import cv2
 import base64
 from ocr_tools import OcrTools 
 from pathlib import Path
+import pickle
 
 WORKING_DIR = Path(__file__).parent
+ocr_tools = OcrTools()
 
 app = Dash(__name__)
 app.layout = html.Div([
@@ -29,8 +32,14 @@ app.layout = html.Div([
         multiple=False
     ),
         html.Div(id='filename'),
-        html.Button('Save template', id='save_template', n_clicks=0),
+        html.Button('Run OCR', id='run_ocr', n_clicks=0),
         dcc.Graph(id='graph',figure=px.imshow(data.chelsea()), style={'height': '90vh'}),
+        dash_table.DataTable(
+            pd.DataFrame().to_dict('records'),
+            id='tbl',style_table={'overflowX': 'auto'},
+            style_header={'text-align':'left'},
+            style_cell={'textAlign': 'left'}
+            ),
         html.Div(id='content')
     ])
 
@@ -78,8 +87,10 @@ def print_image(contents, filename):
 
 @app.callback(
     Output('content', 'children'),
-    Input('graph', 'relayoutData'))
+    Input('graph', 'relayoutData')
+    )
 def add_shape(fig_data):
+    global WORKING_DIR
     if fig_data == None:
         return
     if 'shapes' in fig_data:
@@ -97,10 +108,25 @@ def add_shape(fig_data):
             else:
                 dict_shapes['columns'][f"col_{index_col}"] = (x_0, w)
                 index_col += 1
-                
+        with open(str(WORKING_DIR/'running_template.pckl'), 'wb') as file:
+            pickle.dump(dict_shapes, file, protocol=pickle.HIGHEST_PROTOCOL)        
         return f"{dict_shapes}"
     else :
-        pass
+        pass 
 
+@app.callback(
+    Output('tbl', 'data'),
+    [
+    Input('run_ocr', 'n_clicks'),
+    Input('content', 'children')
+    ])
+def run_ocr(run_ocr_clicked, str_dict_template):
+    global ocr_tools
+    if 'run_ocr' == ctx.triggered_id:
+        # return [{'column-1': 4.5, 'column-2': 'montreal', 'column-3': 'canada'}, {'column-1': 8, 'column-2': 'boston', 'column-3': 'america'}] 
+        df = ocr_tools.build_df_from_template(str_dict_template=str_dict_template)
+        return df.to_dict('records')
+    
 if __name__ == "__main__":
     app.run_server(debug=True)
+
