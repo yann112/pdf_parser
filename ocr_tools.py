@@ -10,7 +10,8 @@ from pathlib import Path
 class OcrTools:
     def __init__(self):
         self.working_dir = Path(__file__).parent
-
+        pytesseract.pytesseract.tesseract_cmd = r'D:\soft\tesseract\tesseract.exe'
+        
     @staticmethod
     def load_settings(path_to_settings:Path="settings.json"):
         with open(path_to_settings) as f:

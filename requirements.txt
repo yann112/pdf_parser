@@ -6,3 +6,4 @@ opencv-python
 dash
 scikit-image
 Pillow
+plotly
