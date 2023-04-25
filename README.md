@@ -1,2 +1,3 @@
 # pdf_parser
-pdf parsing tool based on pysseterac
+web app to extract text from an pdf file(image) based on the ocr pysseterac.
+build with dash
